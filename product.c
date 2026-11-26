@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
@@ -7,11 +8,11 @@
 #include "product.h"
 
 // function to display the product management menu and handle user choices
-void productMenu(Inventory *inv){
+void productMenu(Inventory *inv) {
     int choice;
 
     do {
-        printf("\n=========== PRODUCT MANAGEMENT ===========\n");
+        printf(BLUE "\n=========== PRODUCT MANAGEMENT ===========" RESET "\n");
         printf("1. Add Product\n");
         printf("2. View All Products\n");
         printf("3. Search Product\n");
@@ -40,21 +41,21 @@ void productMenu(Inventory *inv){
         }
     } while (choice != 6);
 
-    printf("%s[INFO] Returning to Main Menu...%s\n", YELLOW, RESET);
+    printf(YELLOW "[INFO] Returning to Main Menu..." RESET "\n");
 }
 
-void addProduct(Inventory *inv){
-    printf("\n  ========== ADD NEW PRODUCT ==========\n");
+void addProduct(Inventory *inv) {
+    printf(BLUE "\n=========== ADD NEW PRODUCT ===========" RESET "\n");
 
     if (inv->productCount >= MAX_PRODUCTS) {
-        printf("%s[ERROR] Cannot add more products.\nMaximum limit reached.%s\n", RED, RESET);
+        printf(RED "[ERROR] Cannot add more products.\nMaximum limit reached." RESET "\n");
         return;
     }
 
     // Create a temporary product structure to hold the new product details
     Product newProduct = {0};
 
-    while (1) {
+    while (true) {
         printf("Enter Product ID: ");
         newProduct.id = get_int();
 
@@ -68,7 +69,7 @@ void addProduct(Inventory *inv){
         }
 
         if (isDuplicate) {
-            printf("%s[ERROR] Product ID already exists.\nPlease use a unique ID.%s\n", RED, RESET);
+            printf(RED "[ERROR] Product ID already exists.\nPlease use a unique ID." RESET "\n");
             printf("------------------------------------------\n");
         } 
         else
@@ -78,45 +79,68 @@ void addProduct(Inventory *inv){
     printf("Enter Product Name: ");
     fgets(newProduct.name, sizeof(newProduct.name), stdin);
     // Remove newline character that is at the end
-    newProduct.name[strcspn(newProduct.name, "\n")] = 0; 
+    newProduct.name[strcspn(newProduct.name, "\n")] = '\0'; 
 
     printf("Enter Product Category: ");
     fgets(newProduct.category, sizeof(newProduct.category), stdin);
     // Remove newline character that is at the end
-    newProduct.category[strcspn(newProduct.category, "\n")] = 0;
+    newProduct.category[strcspn(newProduct.category, "\n")] = '\0';
 
-    printf("Enter Purchase Price: ");
-    scanf("%f", &newProduct.purchasePrice);
+    while (true) {
+        printf("Enter Purchase Price: ");
+        newProduct.purchasePrice = get_float();
 
-    // Only accept selling price if it's greater than or equal to purchase price
-    do {
-        printf("Enter Selling Price: ");
-        scanf("%f", &newProduct.sellingPrice);
-
-        if (newProduct.sellingPrice < newProduct.purchasePrice) {
-            printf("%s[ERROR] Selling price cannot be less than purchase price.%s\n", RED, RESET);
+        if (newProduct.purchasePrice < 0) {
+            printf(RED "[ERROR] Purchase price cannot be negative." RESET "\n");
             printf("------------------------------------------\n");
         }
-    } while (newProduct.sellingPrice < newProduct.purchasePrice);
+        else {
+            break;
+        }
+    }
 
-    printf("Enter Minimum Stock Level: ");
-    scanf("%d", &newProduct.minStockLevel);
+    // Only accept selling price if it's greater than or equal to purchase price
+    while (true) {
+        printf("Enter Selling Price: ");
+        newProduct.sellingPrice = get_float();
+
+        if (newProduct.sellingPrice < newProduct.purchasePrice) {
+            printf(RED "[ERROR] Selling price cannot be less than purchase price." RESET "\n");
+            printf("------------------------------------------\n");
+        }
+        else {
+            break;
+        }
+    }
+
+    while (true) {
+        printf("Enter Minimum Stock Level: ");
+        newProduct.minStockLevel = get_int();
+
+        if (newProduct.minStockLevel < 0) {
+            printf(RED "[ERROR] Minimum stock level cannot be negative." RESET "\n");
+            printf("------------------------------------------\n");
+        }
+        else {
+            break;
+        }
+    }
 
     // Add the new product to the inventory and increment the product count
     inv->products[inv->productCount++] = newProduct;
 
     printf("------------------------------------------\n");
-    printf("%s[SUCCESS] Product added successfully!%s\n", GREEN, RESET);
+    printf(GREEN "[SUCCESS] Product added successfully!" RESET "\n");
     printf("Product ID: %d\n", newProduct.id);
     printf("Product Name: %s\n", newProduct.name);
     printf("------------------------------------------\n");
 }
 
-void viewProducts(Inventory *inv){
-    printf("\n  ========== VIEW ALL PRODUCTS ==========\n");
+void viewProducts(Inventory *inv) {
+    printf(BLUE "\n=========== VIEW ALL PRODUCTS ===========" RESET "\n");
 
     if (inv->productCount == 0) {
-        printf("%s[INFO] No products available in the inventory.%s\n", YELLOW, RESET);
+        printf(YELLOW "[INFO] No products available in the inventory." RESET "\n");
         return;
     }
 
@@ -132,15 +156,15 @@ void viewProducts(Inventory *inv){
     printf("------------------------------------------\n");
 }
 
-void searchProduct(Inventory *inv){
+void searchProduct(Inventory *inv) {
     int choice;
 
-    printf("\n  ========== SEARCH PRODUCT ==========\n");
+    printf(BLUE "\n=========== SEARCH PRODUCT ===========" RESET "\n");
     printf("1. Search by Product ID\n");
     printf("2. Search by Product Name\n");
     choice = get_choice(2);
 
-    if (choice == 1){
+    if (choice == 1) {
         // Search for the product by ID
 
         int searchId;
@@ -163,10 +187,10 @@ void searchProduct(Inventory *inv){
         }
 
         // If the product is not found
-        printf("%s[INFO] Product with ID %d not found.%s\n", YELLOW, searchId, RESET);
+        printf(YELLOW "[INFO] Product with ID %d not found." RESET "\n", searchId);
     }
 
-    else{
+    else {
         // Search product by Name
 
         char name[50];
@@ -189,89 +213,137 @@ void searchProduct(Inventory *inv){
             }
         }
         // If the product is not found
-        printf("%s[INFO] Product with Name %s not found.%s\n", YELLOW, name, RESET);
+        printf(YELLOW "[INFO] Product with Name %s not found." RESET "\n", name);
     }
 }
 
-void updateProduct(Inventory *inv){
+void updateProduct(Inventory *inv) {
     int searchId, choice;
-    printf("\n  ========== UPDATE PRODUCT ==========\n");
+
+    printf(BLUE "\n=========== UPDATE PRODUCT ===========" RESET "\n");
+
+    if (inv->productCount == 0) {
+        printf(YELLOW "[INFO] No products available in the inventory." RESET "\n");
+        return;
+    }
+
     printf("Enter Product ID to update: ");
     searchId = get_int();
-    printf("%s[INFO] Searching for Product ID: %d%s\n", YELLOW, searchId, RESET);
 
-    for (int i = 0; i < inv->productCount; i++){
-        if (inv->products[i].id == searchId){
-            printf("%s[INFO] Product Found.%s\n", YELLOW, RESET);
+    for (int i = 0; i < inv->productCount; i++) {
+        if (inv->products[i].id == searchId) {
             printf("1. Update Product Name\n");
             printf("2. Update Product Category\n");
             printf("3. Update Purchase Price\n");
             printf("4. Update Selling Price\n");
-            printf("5. Update Minimum Stock Level\n"); 
+            printf("5. Update Minimum Stock Level\n");
             choice = get_choice(5);
 
-            switch (choice){
+            switch (choice) {
                 case 1:
                     printf("Enter new Product Name: ");
                     fgets(inv->products[i].name, sizeof(inv->products[i].name), stdin);
-                    inv->products[i].name[strcspn(inv->products[i].name, "\n")] = 0; 
+                    inv->products[i].name[strcspn(inv->products[i].name, "\n")] = '\0';
                     break;
                 case 2:
                     printf("Enter new Product Category: ");
                     fgets(inv->products[i].category, sizeof(inv->products[i].category), stdin);
-                    inv->products[i].category[strcspn(inv->products[i].category, "\n")] = 0; 
+                    inv->products[i].category[strcspn(inv->products[i].category, "\n")] = '\0';
                     break;
                 case 3:
-                    printf("Enter new Purchase Price: ");
-                    scanf("%f", &inv->products[i].purchasePrice);
+                    while (true) {
+                        float newPurchasePrice;
+                        printf("Enter new Purchase Price: ");
+                        newPurchasePrice = get_float();
+
+                        if (newPurchasePrice < 0) {
+                            printf(RED "[ERROR] Purchase price cannot be negative." RESET "\n");
+                            printf("------------------------------------------\n");
+                        }
+                        else if (newPurchasePrice > inv->products[i].sellingPrice) {
+                            printf(RED "[ERROR] Purchase price cannot be greater than selling price." RESET "\n");
+                            printf("------------------------------------------\n");
+                        }
+                        else {
+                            inv->products[i].purchasePrice = newPurchasePrice;
+                            break;
+                        }
+                    }
                     break;
                 case 4:
-                    while (1) {
+                    while (true) {
+                        float newSellingPrice;
                         printf("Enter new Selling Price: ");
-                        scanf("%f", &inv->products[i].sellingPrice);
-                        if (inv->products[i].sellingPrice < inv->products[i].purchasePrice) {
-                            printf("%s[ERROR] Selling price cannot be less than purchase price.%s\n", RED, RESET);
+                        newSellingPrice = get_float();
+
+                        if (newSellingPrice < inv->products[i].purchasePrice) {
+                            printf(RED "[ERROR] Selling price cannot be less than purchase price." RESET "\n");
                             printf("------------------------------------------\n");
-                        } 
-                        else
-                            break; // Exit the loop if the selling price is valid
+                        }
+                        else {
+                            inv->products[i].sellingPrice = newSellingPrice;
+                            break;
+                        }
                     }
                     break;
                 case 5:
-                    printf("Enter new Minimum Stock Level: ");
-                    scanf("%d", &inv->products[i].minStockLevel);
+                    while (true) {
+                        int newMinStockLevel;
+                        printf("Enter new Minimum Stock Level: ");
+                        newMinStockLevel = get_int();
+
+                        if (newMinStockLevel < 0) {
+                            printf(RED "[ERROR] Minimum stock level cannot be negative." RESET "\n");
+                            printf("------------------------------------------\n");
+                        }
+                        else {
+                            inv->products[i].minStockLevel = newMinStockLevel;
+                            break;
+                        }
+                    }
                     break;
             }
-            printf("%s[SUCCESS] Product updated successfully!%s\n", GREEN, RESET);
+
+            printf(GREEN "[SUCCESS] Product updated successfully!" RESET "\n");
             return;
         }
     }
-    printf("%s[ERROR] Product with ID %d not found.%s\n", RED, searchId, RESET);
+
+    printf(RED "[ERROR] Product with ID %d not found." RESET "\n", searchId);
 }
 
-void deleteProduct(Inventory *inv){
+void deleteProduct(Inventory *inv) {
     int searchId;
-    printf("\n  ========== DELETE PRODUCT ==========\n");
+    printf(BLUE "\n=========== DELETE PRODUCT ===========" RESET "\n");
 
     if (inv->productCount == 0) {
-        printf("%s[INFO] No products available in the inventory.%s\n", YELLOW, RESET);
+        printf(YELLOW "[INFO] No products available in the inventory." RESET "\n");
         return;
     }
 
     printf("Enter Product ID to delete: ");
     searchId = get_int();
-    printf("%s[INFO] Searching for Product ID: %d%s\n", YELLOW, searchId, RESET);
 
-    for (int i = 0; i < inv->productCount; i++){
-        if (inv->products[i].id == searchId){
+    for (int i = 0; i < inv->productCount; i++) {
+        if (inv->products[i].id == searchId) {
+            printf(YELLOW "[INFO] Product Found: %s" RESET "\n", inv->products[i].name);
+            printf("Are you sure you want to delete this product?\n");
+            printf("1. Yes\n");
+            printf("2. No\n");
+
+            if (get_choice(2) != 1) {
+                printf(YELLOW "[INFO] Delete cancelled." RESET "\n");
+                return;
+            }
+
             // Shift all products after the found product one position to the left
-            for (int j = i; j < inv->productCount - 1; j++){
+            for (int j = i; j < inv->productCount - 1; j++) {
                 inv->products[j] = inv->products[j + 1];
             }
             inv->productCount--; // Decrease the product count
-            printf("%s[SUCCESS] Product with ID %d deleted successfully!%s\n", GREEN, searchId, RESET);
+            printf(GREEN "[SUCCESS] Product with ID %d deleted successfully!" RESET "\n", searchId);
             return;
         }
     }
-    printf("%s[ERROR] Product with ID %d not found.%s\n", RED, searchId, RESET);
+    printf(RED "[ERROR] Product with ID %d not found." RESET "\n", searchId);
 }
